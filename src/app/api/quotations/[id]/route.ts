@@ -4,11 +4,11 @@ import Quotation from "@/models/Quotation";
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     await dbConnect();
-    const id = await Promise.resolve(params.id);
+    const { id } = await params;
     console.log("Looking up quotation with ID:", id);
 
     // Try finding by MongoDB _id (if it's a valid ObjectId) OR by the custom string 'id'
@@ -30,12 +30,12 @@ export async function GET(
 }
 export async function PATCH(
   request: Request,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const { status } = await request.json();
     await dbConnect();
-    const id = await Promise.resolve(params.id);
+    const { id } = await params;
 
     const isObjectId = /^[0-9a-fA-F]{24}$/.test(id);
     const query = isObjectId ? { $or: [{ _id: id }, { id: id }] } : { id: id };
