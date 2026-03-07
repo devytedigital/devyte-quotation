@@ -23,6 +23,7 @@ export default function DynamicPreviewPage() {
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
   const [downloading, setDownloading] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
   const previewRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -41,8 +42,12 @@ export default function DynamicPreviewPage() {
   const handleDownload = async () => {
     if (!previewRef.current || !data) return;
     setDownloading(true);
+    setIsExporting(true);
 
     try {
+      // Small delay to allow the DOM to update with isExporting styles
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
       const { toCanvas } = await import("html-to-image");
       const element = previewRef.current;
 
@@ -54,53 +59,35 @@ export default function DynamicPreviewPage() {
       });
 
       const imgData = canvas.toDataURL("image/png");
-      const pdf = new jsPDF("p", "mm", "a4");
 
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = pdf.internal.pageSize.getHeight();
+      // Use a temporary PDF instance to get image properties safely
+      const tempPdf = new jsPDF();
+      const imgProps = tempPdf.getImageProperties(imgData);
 
-      const imgProps = pdf.getImageProperties(imgData);
-      const imgWidth = pdfWidth;
-      const imgHeight = (imgProps.height * pdfWidth) / imgProps.width;
+      // Calculate dynamic PDF height in inches based on the A4 width (8.27in)
+      const pdfWidth = 8.27;
+      const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
 
-      let heightLeft = imgHeight;
-      let position = 0;
+      // Initialize the actual jsPDF with the dynamic height
+      const pdf = new jsPDF("p", "in", [pdfWidth, pdfHeight]);
 
-      // Add first page
       pdf.addImage(
         imgData,
         "PNG",
         0,
-        position,
-        imgWidth,
-        imgHeight,
+        0,
+        pdfWidth,
+        pdfHeight,
         undefined,
-        "NONE", // No compression for maximum clarity
+        "NONE",
       );
-      heightLeft -= pdfHeight;
-
-      // Add extra pages if needed
-      while (heightLeft >= 0) {
-        position = heightLeft - imgHeight;
-        pdf.addPage();
-        pdf.addImage(
-          imgData,
-          "PNG",
-          0,
-          position,
-          imgWidth,
-          imgHeight,
-          undefined,
-          "NONE", // No compression for maximum clarity
-        );
-        heightLeft -= pdfHeight;
-      }
 
       pdf.save(`Quotation_${data.quotationNumber || "Preview"}.pdf`);
     } catch (error) {
       console.error("PDF Generation Error:", error);
     } finally {
       setDownloading(false);
+      setIsExporting(false);
     }
   };
 
@@ -182,10 +169,14 @@ export default function DynamicPreviewPage() {
         </div>
 
         <div
-          className="print:m-0 shadow-2xl shadow-slate-200/50"
+          className={
+            isExporting
+              ? "bg-white"
+              : "print:m-0 shadow-2xl shadow-slate-200/50"
+          }
           ref={previewRef}
         >
-          <QuotationPreview data={data} />
+          <QuotationPreview data={data} isExporting={isExporting} />
         </div>
       </div>
 

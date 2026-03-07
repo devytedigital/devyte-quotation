@@ -7,17 +7,26 @@ import { parse, format } from "date-fns";
 
 interface Props {
   data: Quotation;
+  isExporting?: boolean;
 }
 
-export default function QuotationPreview({ data }: Props) {
+export default function QuotationPreview({ data, isExporting }: Props) {
   const parsedDate = data.date
     ? parse(data.date, "dd/MM/yyyy", new Date())
     : new Date();
 
   return (
-    <div className="bg-white text-slate-800 w-full max-w-[850px] mx-auto shadow-sm border border-slate-200 flex flex-col font-sans print:shadow-none print:border-none print:max-w-none min-h-[800px]">
+    <div
+      className={
+        isExporting
+          ? "bg-white text-slate-800 w-[794px] h-auto flex flex-col font-sans"
+          : "bg-white text-slate-800 w-full max-w-[850px] mx-auto shadow-sm border border-slate-200 flex flex-col font-sans print:shadow-none print:border-none print:max-w-none min-h-[800px]"
+      }
+    >
       {/* ── Header Band ── */}
-      <div className="flex justify-between items-center px-8 py-3 border-b border-slate-200 print:px-6 print:py-3">
+      <div
+        className={`flex justify-between items-center px-8 py-3 border-b border-slate-200 print:px-6 print:py-3 ${isExporting ? "px-4 py-2" : ""}`}
+      >
         {/* Left — Logo */}
         <div className="bg-[#2a3c61] px-3 py-1.5 rounded">
           <div className="text-white font-black text-xl leading-none tracking-tighter">
@@ -34,9 +43,11 @@ export default function QuotationPreview({ data }: Props) {
         </div>
       </div>
       {/* ── Body ── */}
-      <div className="flex-1 p-8 print:p-6">
+      <div className={`flex-1 p-8 print:p-6 ${isExporting ? "p-4" : ""}`}>
         {/* Top Header */}
-        <div className="flex justify-between items-start mb-8">
+        <div
+          className={`flex justify-between items-start ${isExporting ? "mb-4" : "mb-8"}`}
+        >
           {/* Left — Company Details */}
           <div className="space-y-1">
             <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">
@@ -54,9 +65,9 @@ export default function QuotationPreview({ data }: Props) {
                 data.companyDetails?.country) && (
                 <div>
                   {[
-                    data.companyDetails.district,
-                    data.companyDetails.state,
-                    data.companyDetails.country,
+                    data.companyDetails?.district,
+                    data.companyDetails?.state,
+                    data.companyDetails?.country,
                   ]
                     .filter(Boolean)
                     .join(", ")}
@@ -65,13 +76,13 @@ export default function QuotationPreview({ data }: Props) {
             </div>
             <div className="text-slate-500 text-xs mt-1 space-y-0.5">
               {data.companyDetails?.phone && (
-                <div>{data.companyDetails.phone}</div>
+                <div>{data.companyDetails?.phone}</div>
               )}
               {data.companyDetails?.email && (
-                <div>{data.companyDetails.email}</div>
+                <div>{data.companyDetails?.email}</div>
               )}
               {data.companyDetails?.website && (
-                <div>{data.companyDetails.website}</div>
+                <div>{data.companyDetails?.website}</div>
               )}
             </div>
           </div>
@@ -115,7 +126,9 @@ export default function QuotationPreview({ data }: Props) {
         </div>
 
         {data.projectTitle && (
-          <div className="mb-6 border-b-2 border-slate-100 pb-2">
+          <div
+            className={`${isExporting ? "mb-3" : "mb-6"} border-b-2 border-slate-100 pb-2`}
+          >
             <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">
               PROJECT
             </div>
@@ -168,7 +181,9 @@ export default function QuotationPreview({ data }: Props) {
         </div>
 
         {/* Totals Section */}
-        <div className="mt-8 flex justify-between items-start print:break-inside-avoid">
+        <div
+          className={`${isExporting ? "mt-4" : "mt-8"} flex justify-between items-start print:break-inside-avoid`}
+        >
           <div className="flex-1 pt-6 text-[11px] text-slate-600 max-w-md">
             {data.notes && (
               <div className="space-y-2">
@@ -216,7 +231,6 @@ export default function QuotationPreview({ data }: Props) {
             </div>
           </div>
         </div>
-
         {/* Footer / Empty Space to fill page */}
         <div className="flex-1"></div>
       </div>{" "}
